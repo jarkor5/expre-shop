@@ -1,0 +1,9 @@
+# Para Node
+node_modules/
+npm-debug.log
+
+# Para Python
+__pycache__/
+*.py[cod]
+venv/
+*.env
