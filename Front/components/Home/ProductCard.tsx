@@ -75,20 +75,23 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 0.5,
     borderColor: "#F1AB86",
-    width: 280,
+    width:  280,
     alignItems: "center",
     height: 350,
+    
   },
   catalogCard: {
     marginRight: 24,
+    marginLeft: 0,
     backgroundColor: "#FEFFFE",
     padding: 12,
     borderRadius: 8,
     borderWidth: 0.5,
     borderColor: "#F1AB86",
-    width: 320, // mayor ancho para el catálogo
+    width: '90%', 
     alignItems: "center",
     height: 350,
+    
   },
   image: {
     width: 200,
@@ -99,7 +102,7 @@ const styles = StyleSheet.create({
     alignSelf: "center",
   },
   catalogImage: {
-    width: 240, // imagen más grande en catálogo
+    width: 240, 
     height: 160,
     marginBottom: 8,
     borderRadius: 8,
@@ -107,13 +110,13 @@ const styles = StyleSheet.create({
     alignSelf: "center",
   },
   name: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: "600",
     textAlign: "center",
     color: "#461220",
   },
   price: {
-    fontSize: 20,
+    fontSize: 18,
     color: "#8C2F39",
     marginTop: 4,
     alignSelf: "center",

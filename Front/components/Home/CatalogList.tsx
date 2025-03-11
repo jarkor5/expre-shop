@@ -1,3 +1,4 @@
+// CatalogList.tsx
 import React from "react";
 import { View, FlatList, StyleSheet } from "react-native";
 import { Button } from "react-native-paper";
@@ -14,18 +15,23 @@ export default function CatalogList({
   hasMoreCatalogProducts: boolean;
 }) {
   const renderItem = ({ item }: { item: Product }) => (
-    <ProductCard product={item} variant="catalog" onPress={() => { /* TODO: Navegación */ }} />
+    <View style={styles.itemContainer}>
+      <ProductCard product={item} variant="catalog" onPress={() => { /* TODO: Navegación */ }} />
+    </View>
   );
 
   return (
     <View style={styles.container}>
+      <View style={{alignSelf: 'center', width: '100%',}}>
       <FlatList
         data={catalogProducts}
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
-        numColumns={3}
-        columnWrapperStyle={styles.columnWrapper}
+        contentContainerStyle={styles.flatListContainer}
+        scrollEnabled={false} 
       />
+      </View>
+      
       {hasMoreCatalogProducts && (
         <View style={styles.buttonContainer}>
           <Button mode="outlined" onPress={loadMoreCatalog}>
@@ -38,13 +44,30 @@ export default function CatalogList({
 }
 
 const styles = StyleSheet.create({
-  container: { width: "80%", alignSelf: "center", paddingTop: 40, top: 0 },
-  columnWrapper: {
-    justifyContent: "flex-start",
-    marginBottom: 24,
-    padding: 24,
-    flexWrap: "wrap",
-    alignContent: "flex-start",
+  container: {
+    width: "100%",
+    alignSelf: "center",
+    paddingTop: 40,
+    top: 0,
+    marginRight: '0%',
+    marginLeft: '10%',
+    padding: 0
   },
-  buttonContainer: { alignSelf: "center", marginTop: 16 },
+  flatListContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "flex-start",
+    padding: 4,
+    marginLeft: '0%'
+
+  },
+  itemContainer: {
+    width: "100%", 
+    padding: 8,
+  },
+  buttonContainer: {
+    alignSelf: "center",
+    marginTop: 16,
+    left: '-3%'
+  },
 });

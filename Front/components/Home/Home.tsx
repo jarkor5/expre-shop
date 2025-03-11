@@ -1,4 +1,3 @@
-// Home.tsx
 import React, { useState, useEffect, useRef } from "react";
 import { View, Text, StyleSheet, ScrollView, LayoutChangeEvent, NativeSyntheticEvent, NativeScrollEvent , Image} from "react-native";
 import { useRouter } from "expo-router";
@@ -10,7 +9,7 @@ import Filters from "./Filters";
 import CatalogList from "./CatalogList";
 
 // Constante para paginación
-const CATALOG_LIMIT = 9;
+const CATALOG_LIMIT = 12;
 
 export default function Home() {
   // Estados de productos
@@ -106,13 +105,13 @@ export default function Home() {
     }
   };
 
-  // Funciones para manejo de filtros (solo un filtro a la vez)
+  // Funciones para manejo de filtros 
   const toggleCategory = (category: string) => {
     if (selectedCategories.includes(category)) {
       setSelectedCategories([]);
     } else {
       setSelectedCategories([category]);
-      setSelectedBrands([]); // Limpiar marcas si se selecciona una categoría
+      setSelectedBrands([]); 
     }
   };
 
@@ -121,7 +120,7 @@ export default function Home() {
       setSelectedBrands([]);
     } else {
       setSelectedBrands([brand]);
-      setSelectedCategories([]); // Limpiar categorías si se selecciona una marca
+      setSelectedCategories([]); 
     }
   };
 
@@ -129,7 +128,7 @@ export default function Home() {
   if (loading) {
     return (
       <View style={styles.container}>
-        <Text>Cargando productos... Gracias por tu paciencia!</Text>
+        <Text style={{fontSize: 36, alignSelf: 'center'}}>Cargando productos... Gracias por tu paciencia!</Text>
       </View>
     );
   }
@@ -171,15 +170,14 @@ export default function Home() {
           </View>
         </View>
 
-        {/* Componente modular: FeaturedCarousel */}
         <FeaturedCarousel
           featuredProducts={featuredProducts}
 
         />
 <Text style={styles.title}>Descubre nuestro Cátalogo</Text>
-        <View style={{ flexDirection: "row", }}>
+        <View style={{ flexDirection: "row", width: '100%', alignSelf: 'center' }}>
           
-          <ScrollView>
+          <ScrollView style={{ width: '20%'}}>
           <Filters
             filters={filters}
             selectedCategories={selectedCategories}
@@ -193,20 +191,24 @@ export default function Home() {
           />
           </ScrollView>
         
-
-          <CatalogList
+      <ScrollView style={{ width: '100%', padding: 16, marginLeft: '5%'}}>
+      <CatalogList
             catalogProducts={catalogProducts}
             loadMoreCatalog={handleLoadMoreCatalog}
             hasMoreCatalogProducts={hasMoreCatalogProducts}
           />
+      </ScrollView>
+        
         </View>
-      </View>
+          
+        </View>
+
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff", padding: 16 },
+  container: { flex: 1, backgroundColor: "#fff", padding: 8 },
   bannerContainer: { width: "100%", height: 300, marginVertical: 10 },
   bannerImage: { width: "100%", height: "100%", resizeMode: "cover", borderRadius: 8 },
   title: { fontSize: 36, fontWeight: "bold", marginBottom: 10, textAlign: "center" },

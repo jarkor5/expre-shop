@@ -60,8 +60,8 @@ export default function Filters({
 }
 
 const styles = StyleSheet.create({
-  container: { marginVertical: 20, marginRight: "5%" },
+  container: { marginVertical: 20, marginRight: "5%", width: '100%', paddingLeft: 4 },
   title: { fontSize: 20, fontWeight: "bold", marginBottom: 10 },
   row: { flexDirection: "row", alignItems: "center", marginBottom: 5 },
-  viewMore: { fontSize: 16, color: "#007AFF", textAlign: "center", marginTop: 5 },
+  viewMore: { fontSize: 16, color: "#007AFF", margin: 8 },
 });
