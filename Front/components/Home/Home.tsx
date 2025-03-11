@@ -10,10 +10,10 @@ import {
   ScrollView,
   Image
 } from "react-native";
-import { Product, fetchFeaturedProducts,  fetchProductsPaginated } from "@/data/products";
+import { Product, fetchFeaturedProducts,  fetchProductsPaginated, fetchFilters, fetchProductsFiltered } from "@/data/products";
 import { useRouter } from "expo-router";
 import ProductCard from "./ProductCard";
-import { Button, IconButton } from "react-native-paper";
+import { Button, IconButton, Checkbox } from "react-native-paper";
 
 export default function Home() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -21,35 +21,80 @@ export default function Home() {
   const [scrollX, setScrollX] = useState(0);
   const [viewWidth, setViewWidth] = useState(0);
   const [contentWidth, setContentWidth] = useState(0);
-
+const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
 const [catalogProducts, setCatalogProducts] = useState<Product[]>([]);
 const [catalogPage, setCatalogPage] = useState(1);
 const catalogLimit = 9;
-const [hasMOreCatalogProducts, setHasMoreCatalogProducts] = useState(true);
+const [hasMoreCatalogProducts, setHasMoreCatalogProducts] = useState(true);
+const [filters,setFilters] = useState<{categories: string[], brands: string[]}>({categories: [], brands: []})
+const [selectedCategories, setSelectedCategories] = useState<string[]>([])
+const [selectedBrands, setSelectedBrands] = useState<string[]>([]) 
+const [showAllCategories, setShowAllCategories] = useState(false)
+const [showAllBrands, setShowAllBrands] = useState(false)
 
   const router = useRouter();
   const flatListRef = useRef<FlatList>(null);
 
   useEffect(() => {
     fetchFeaturedProducts().then((data) => {
-      setProducts(data);
-      setLoading(false);
+      setFeaturedProducts(data);
     });
-    loadCatalogPage(1)
+    loadCatalogPage(1);
+    fetchFilters()
+      .then((data) => {
+        setFilters(data);
+      })
+      .finally(() => setLoading(false));
   }, []);
 
+  useEffect(() => {
+    setCatalogPage(1);
+    setHasMoreCatalogProducts(true);
+    loadCatalogPage(1);
+  }, [selectedCategories, selectedBrands]);
+  
+
+  
+  
+
   const loadCatalogPage = (page: number) => {
-    fetchProductsPaginated(page, catalogLimit).then((data) => {
-      if (data.length  <  catalogLimit){
+    let queryParams = `?page=${page}&limit=${catalogLimit}`;
+    if (selectedCategories.length > 0) {
+      queryParams += `&category=${selectedCategories.join(",")}`;
+    }
+    if (selectedBrands.length > 0) {
+      queryParams += `&brand=${selectedBrands.join(",")}`;
+    }
+    fetchProductsFiltered(queryParams).then((data) => {
+      if (data.length < catalogLimit) {
         setHasMoreCatalogProducts(false);
       }
-      if (page === 1){
+      if (page === 1) {
         setCatalogProducts(data);
       } else {
-        setCatalogProducts((prev)  =>  [...prev, ...data])
+        setCatalogProducts((prev) => [...prev, ...data]);
+      }
+    });
+  };
+  
+  const toggleCategory = (category: string) => {
+   if (selectedCategories.includes(category)) {
+     setSelectedCategories([])
+   }
+    else{
+      setSelectedCategories([category])
     }
-  })
-}
+  };
+
+  const toggleBrand = (brand: string) => {
+    if (selectedBrands.includes(brand)) {
+      setSelectedBrands([]);
+    } else {
+      setSelectedBrands([brand]);
+    }
+  };
+  
+  
 
 const handleLoadMoreCatalog = ()=>{
   const  nextPage   = catalogPage + 1
@@ -167,7 +212,7 @@ const handleLoadMoreCatalog = ()=>{
             />
             <FlatList
               ref={flatListRef}
-              data={products.filter((p) => p.isfeatured)}
+              data={featuredProducts.filter((p) => p.isfeatured)}
               renderItem={renderItem}
               keyExtractor={(item) => item.id}
               horizontal
@@ -191,23 +236,87 @@ const handleLoadMoreCatalog = ()=>{
           </View>
         </View>
 
-        <View style={styles.catalogContainer}>
-          <Text style={styles.title}>Descubre nuestro cátalogo</Text>
-          <FlatList
-           data={catalogProducts}
-           renderItem={renderCatalogItem}
-            keyExtractor={(item) => item.id}
-            numColumns={3}
-            columnWrapperStyle={{ justifyContent: 'space-around', marginBottom: 24 }}
-          />
-          {hasMOreCatalogProducts && (
-            <View style={{ alignSelf: 'center', marginTop: 16 }}>
-             <Button mode="outlined" onPress={handleLoadMoreCatalog}>Ver más</Button>
-            </View>
-          )}
+<View>
+<Text style={styles.title}>Descubre nuestro cátalogo</Text>
+<View style={{ flexDirection: 'row'}}>
+<View style={styles.filtersContainer}>
+  <Text style={styles.filtersTitle}>Filtrar por Categoría:</Text>
+  {(showAllCategories ? filters.categories : filters.categories.slice(0, 5)).map((cat: string) => (
+    <View key={cat} style={styles.checkboxRow}>
+      <Checkbox
+        status={selectedCategories.includes(cat) ? "checked" : "unchecked"}
+        onPress={() => toggleCategory(cat)}
+      />
+      <Text>{cat}</Text>
+    </View>
+  ))}
+  {filters.categories.length > 5 && (
+    <Text
+      style={styles.viewMoreText}
+      onPress={() => setShowAllCategories(!showAllCategories)}
+    >
+      {showAllCategories ? "Ver menos" : "Ver más"}
+    </Text>
+  )}
 
+  <Text style={styles.filtersTitle}>Filtrar por Marca:</Text>
+  {(showAllBrands ? filters.brands : filters.brands.slice(0, 5)).map((brand: string) => (
+    <View key={brand} style={styles.checkboxRow}>
+      <Checkbox
+        status={selectedBrands.includes(brand) ? "checked" : "unchecked"}
+        onPress={() => toggleBrand(brand)}
+      />
+      <Text>{brand}</Text>
+    </View>
+  ))}
+  {filters.brands.length > 5 && (
+    <Text
+      style={styles.viewMoreText}
+      onPress={() => setShowAllBrands(!showAllBrands)}
+    >
+      {showAllBrands ? "Ver menos" : "Ver más"}
+    </Text>
+  )}
+</View>
+
+
+<View style={styles.catalogContainer}>
+<FlatList
+    data={catalogProducts}
+    renderItem={renderCatalogItem}
+    keyExtractor={(item) => item.id}
+    numColumns={3}
+    columnWrapperStyle={{
+      justifyContent: "flex-start",
+      marginBottom: 24,
+      padding: 24,
+      flexWrap: "wrap",
+      alignContent: "flex-start",
+      height: '100%',
+      top: 0
+    }}
+  />
+  {hasMoreCatalogProducts && (
+    <View style={{ alignSelf: "center", marginTop: 16 }}>
+      <Button
+        mode="outlined"
+        onPress={() => {
+          const nextPage = catalogPage + 1;
+          setCatalogPage(nextPage);
+          loadCatalogPage(nextPage);
+        }}
+      >
+        Ver más
+      </Button>
+    </View>
+  )}
           
         </View>
+
+</View>
+</View>
+
+       
 
       </View>
     </ScrollView>
@@ -294,6 +403,30 @@ const styles = StyleSheet.create({
   catalogContainer: {
     width: '80%',
     alignSelf: 'center',
-  }
+    paddingTop: 40,
+    top: 0,
+    height: '100%'
+  },
+  filtersContainer: {
+    marginVertical: 20,
+    marginRight: '5%'
+  },
+  filtersTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 10,
+  },
+  checkboxRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 5,
+  },
+
+  viewMoreText: {
+    fontSize: 16,
+    color: "#007AFF", // Color azul, por ejemplo
+    textAlign: "center",
+    marginTop: 5,
+  },
 
 });
