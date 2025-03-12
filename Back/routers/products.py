@@ -134,6 +134,7 @@ def update_product(
     db.refresh(db_product)
     return db_product
 
+
 # Endpoint: Obtener categorías únicas
 @router.get("/categories", response_model=List[str])
 def get_categories(db: Session = Depends(get_db)):
@@ -146,7 +147,6 @@ def get_filters(category: Optional[str] = None, db: Session = Depends(get_db)):
     # Obtener todas las categorías disponibles (sin filtro)
     categories = db.query(ProductDB.category).distinct().all()
     categories_list = [c[0] for c in categories if c[0] is not None]
-
     # Si se proporciona una categoría, filtrar las marcas por esa categoría
     if category:
         brands = db.query(ProductDB.brand).filter(ProductDB.category == category).distinct().all()
