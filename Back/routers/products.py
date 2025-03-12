@@ -1,4 +1,3 @@
-# routers/products.py
 from fastapi import APIRouter, Depends, HTTPException, Body
 from sqlalchemy.orm import Session
 from typing import List, Optional, Dict, Any
@@ -9,7 +8,6 @@ from schemas import Product, ProductUpdate
 
 router = APIRouter()
 
-# Dependencia para obtener la sesión de la base de datos
 def get_db():
     db = SessionLocal()
     try:
@@ -17,7 +15,6 @@ def get_db():
     finally:
         db.close()
 
-# Endpoint: Obtener todos los productos (con filtros opcionales)
 @router.get("/products", response_model=List[Product])
 def read_products(
     skip: int = 0,
@@ -46,9 +43,9 @@ def read_products_paginated(
     skip = (page - 1) * limit
     query = db.query(ProductDB)
     if category:
-        query = query.filter(ProductDB.category == category)
+        query = query.filter(ProductDB.category.ilike(category))
     if brand:
-        query = query.filter(ProductDB.brand == brand)
+        query = query.filter(ProductDB.brand.ilike(brand))
     products = query.offset(skip).limit(limit).all()
     return products
 
@@ -56,7 +53,7 @@ def read_products_paginated(
 @router.post("/products", response_model=Product)
 def create_product(product: Product, db: Session = Depends(get_db)):
     db_product = ProductDB(
-        id=product.id,  # Si prefieres autoincrement, elimina este campo
+        id=product.id, 
         name=product.name,
         price=product.price,
         image=product.image,
@@ -79,7 +76,7 @@ def create_products_batch(
     db_products = []
     for product in products:
         db_product = ProductDB(
-            id=product.id,  # TODO: Considera quitar el id si usas autoincrement
+            id=product.id, 
             name=product.name,
             price=product.price,
             image=product.image,
@@ -106,10 +103,10 @@ def update_products_batch(
         update_data = update.dict(exclude_unset=True)
         product_id = update_data.get("id")
         if not product_id:
-            continue  # TODO: Considera retornar error si falta id
+            continue  # TODO:  retornar error si falta id
         db_product = db.query(ProductDB).filter(ProductDB.id == product_id).first()
         if not db_product:
-            continue  # TODO: Considera retornar error si no se encuentra el producto
+            continue  # TODO: retornar error si no se encuentra el producto
         update_data.pop("id", None)
         for key, value in update_data.items():
             setattr(db_product, key, value)
@@ -145,9 +142,16 @@ def get_categories(db: Session = Depends(get_db)):
 
 # Endpoint: Obtener filtros (categorías y marcas)
 @router.get("/filters", response_model=Dict[str, List[str]])
-def get_filters(db: Session = Depends(get_db)):
+def get_filters(category: Optional[str] = None, db: Session = Depends(get_db)):
+    # Obtener todas las categorías disponibles (sin filtro)
     categories = db.query(ProductDB.category).distinct().all()
-    brands = db.query(ProductDB.brand).distinct().all()
     categories_list = [c[0] for c in categories if c[0] is not None]
+
+    # Si se proporciona una categoría, filtrar las marcas por esa categoría
+    if category:
+        brands = db.query(ProductDB.brand).filter(ProductDB.category == category).distinct().all()
+    else:
+        brands = db.query(ProductDB.brand).distinct().all()
     brands_list = [b[0] for b in brands if b[0] is not None]
+
     return {"categories": categories_list, "brands": brands_list}

@@ -40,10 +40,13 @@ export const fetchProductsFiltered  = async (query: string): Promise<Product[]> 
   }
 }
 
-
-export const fetchFilters = async (): Promise<{ categories: string[]; brands: string[] }> => {
+export const fetchFilters = async (category?: string): Promise<{ categories: string[]; brands: string[] }> => {
   try {
-    const response = await fetch("http://127.0.0.1:8001/filters");
+    let url = "http://127.0.0.1:8001/filters";
+    if (category) {
+      url += `?category=${encodeURIComponent(category)}`;
+    }
+    const response = await fetch(url);
     if (!response.ok) {
       throw new Error("Error al obtener filtros");
     }
@@ -53,7 +56,6 @@ export const fetchFilters = async (): Promise<{ categories: string[]; brands: st
     return { categories: [], brands: [] };
   }
 };
-
 
 export const fetchFeaturedProducts = async (): Promise<Product[]> => {
   try {

@@ -35,32 +35,55 @@ export default function Home() {
 
   const router = useRouter();
   const flatListRef = useRef<any>(null);
+  const isFirstLoad = useRef(true);
 
-  // Carga inicial de datos
   useEffect(() => {
-    fetchFeaturedProducts().then((data) => setFeaturedProducts(data));
-    loadCatalogPage(1);
-    fetchFilters()
-      .then((data) => setFilters(data))
-      .finally(() => setLoading(false));
-  }, []);
-
-  // Reiniciar catálogo cuando cambian los filtros
-  useEffect(() => {
-    setCatalogPage(1);
-    setHasMoreCatalogProducts(true);
-    loadCatalogPage(1);
+    const loadData = async () => {
+      if (isFirstLoad.current) {
+        const featured = await fetchFeaturedProducts();
+        setFeaturedProducts(featured);
+        isFirstLoad.current = false;
+      }
+      let filtersData;
+      if (selectedCategories.length > 0) {
+        filtersData = await fetchFilters(selectedCategories[0]);
+      } else {
+        filtersData = await fetchFilters();
+      }
+      setFilters(filtersData);
+      setCatalogPage(1);
+      setHasMoreCatalogProducts(true);
+  
+      let queryParams = `?page=1&limit=${CATALOG_LIMIT}`;
+      if (selectedCategories.length > 0) {
+        queryParams += `&category=${encodeURIComponent(selectedCategories[0])}`;
+      }
+      if (selectedBrands.length > 0) {
+        queryParams += `&brand=${encodeURIComponent(selectedBrands[0])}`;
+      }
+      console.log("Query Params:", queryParams); 
+  
+      const catalogData = await fetchProductsFiltered(queryParams);
+      if (catalogData.length < CATALOG_LIMIT) {
+        setHasMoreCatalogProducts(false);
+      }
+      setCatalogProducts(catalogData);
+      setLoading(false);
+    };
+  
+    loadData();
   }, [selectedCategories, selectedBrands]);
+  
 
-  // Función para cargar el catálogo con filtros y paginación
   const loadCatalogPage = (page: number) => {
     let queryParams = `?page=${page}&limit=${CATALOG_LIMIT}`;
     if (selectedCategories.length > 0) {
-      queryParams += `&category=${selectedCategories.join(",")}`;
+      queryParams += `&category=${encodeURIComponent(selectedCategories[0])}`;
     }
     if (selectedBrands.length > 0) {
-      queryParams += `&brand=${selectedBrands.join(",")}`;
+      queryParams += `&brand=${encodeURIComponent(selectedBrands[0])}`;
     }
+    console.log("Query Params:", queryParams); 
     fetchProductsFiltered(queryParams).then((data) => {
       if (data.length < CATALOG_LIMIT) {
         setHasMoreCatalogProducts(false);
@@ -73,6 +96,8 @@ export default function Home() {
     });
     // TODO: Manejar errores en la carga de datos
   };
+  
+
 
   // Función para cargar más productos del catálogo
   const handleLoadMoreCatalog = () => {
@@ -110,17 +135,16 @@ export default function Home() {
     if (selectedCategories.includes(category)) {
       setSelectedCategories([]);
     } else {
-      setSelectedCategories([category]);
-      setSelectedBrands([]); 
+      setSelectedCategories([category])
+      setSelectedBrands([])
     }
   };
-
+  
   const toggleBrand = (brand: string) => {
     if (selectedBrands.includes(brand)) {
       setSelectedBrands([]);
     } else {
       setSelectedBrands([brand]);
-      setSelectedCategories([]); 
     }
   };
 
