@@ -7,6 +7,7 @@ export interface Product {
   isfeatured: boolean;
   category?: string;
   brand?: string;
+  technicalDetails?: string;
 }
 
 

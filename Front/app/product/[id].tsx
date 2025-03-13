@@ -1,6 +1,6 @@
 // app/product/[id].tsx
 import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, Image, ActivityIndicator } from "react-native";
+import { View, Text, StyleSheet, Image, ActivityIndicator, ScrollView} from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { fetchProductById, Product } from "@/data/products";
 
@@ -37,7 +37,8 @@ export default function ProductDetail() {
     }
 
     return (
-        <View style={styles.container}>
+        <ScrollView>
+            <View style={styles.container}>
             {/* Encabezado con la imagen */}
             <Image source={{ uri: product.image }} style={styles.image} />
 
@@ -47,8 +48,15 @@ export default function ProductDetail() {
             <Text style={styles.category}>{product.category} - {product.brand}</Text>
 
             <Text style={styles.description}>{product.description}</Text>
+            <Text style={styles.subheading}>Detalles Técnicos</Text>
+<Text style={styles.techDetails}>
+  {product.technicalDetails ?? "Sin detalles técnicos"}
+</Text>
+
             {/* Aquí podrías agregar un botón de 'Agregar al carrito' o 'Comprar ahora' */}
         </View>
+        </ScrollView>
+        
     );
 }
 
@@ -89,4 +97,9 @@ const styles = StyleSheet.create({
         color: "#333",
         marginTop: 8,
     },
+    subheading: {
+
+    },
+    techDetails: {},
+    technicalDetails: {}
 });
