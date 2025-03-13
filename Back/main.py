@@ -8,7 +8,6 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Backend para Expre Shop")
 
-# Middleware CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # TODO: Limitar

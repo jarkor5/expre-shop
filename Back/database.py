@@ -9,4 +9,4 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
 
-# TODO: Considerar agregar funciones de conexión/reconexión en producción.
+# TODO: Considerar agregar funciones de conexión/reconexión
