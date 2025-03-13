@@ -72,3 +72,16 @@ export const fetchFeaturedProducts = async (): Promise<Product[]> => {
 }
 
 
+export const fetchProductById = async (id: string | number): Promise<Product | null> => {
+  try {
+    const response = await fetch (`http://127.0.0.1:8001/products/${id}`)
+    if (!response.ok){
+      throw new Error(`Error al obtener producto con id ${id}`)
+    }
+    return await response.json()
+  } catch (error){
+    console.error(error)
+    return null
+  }
+}
+

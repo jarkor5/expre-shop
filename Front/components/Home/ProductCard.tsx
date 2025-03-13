@@ -2,6 +2,7 @@ import React from "react";
 import { Pressable, Image, Text, StyleSheet, View } from "react-native";
 import { Product } from "@/data/products";
 import { Button } from "react-native-paper";
+import { useRouter } from "expo-router";
 
 type ProductCardProps = {
   product: Product;
@@ -16,6 +17,7 @@ export default function ProductCard({
   onAddToCart,
   variant = "default",
 }: ProductCardProps) {
+const router = useRouter()
   const isCatalog = variant === "catalog"
   const maxLen = isCatalog ? 21 : 25
 
@@ -26,7 +28,15 @@ product.name.length > maxLen
       
 
   return (
-    <Pressable onPress={onPress}>
+    <Pressable onPress={ ()=> {
+      if (onPress){
+        onPress()
+      }
+      router.push({
+        pathname: "/product/[id]",
+        params: { id: product.id },
+      });
+    }}>
       {({ hovered }) => (
         <View
           style={[
