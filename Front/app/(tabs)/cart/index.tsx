@@ -1,6 +1,8 @@
 import React from "react"
-import { View, Text, Button, StyleSheet } from "react-native"
+import { View, Text, Button, StyleSheet, Pressable } from "react-native"
 import { useCart } from "@/context/useCart"
+import { useRouter } from "expo-router"
+import { AntDesign } from "@expo/vector-icons"
 
 export default function CartScreen() {
   const { cartItems, removeFromCart, clearCart } = useCart()
@@ -9,10 +11,20 @@ export default function CartScreen() {
     0
   )
 
+  const router = useRouter()
+
   return (
     <View style={styles.container}>
+      <View>
+      <Pressable
+                  onPress={() => router.back()}
+                  >
+                  <AntDesign name="arrowleft" size={24} color="black" />
+                  </Pressable>
       <Text style={styles.title}>Carrito de Compras</Text>
 
+      </View>
+      
       {cartItems.length === 0 ? (
         <Text>No hay productos en el carrito</Text>
       ) : (
