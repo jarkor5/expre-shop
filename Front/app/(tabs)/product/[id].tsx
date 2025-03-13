@@ -38,8 +38,9 @@ export default function ProductDetail() {
     }
 
     return (
-        <View style={{backgroundColor: '#d9d9d9', flex: 1}}>
-            <View style={{flexDirection: 'row', justifyContent: 'space-around', backgroundColor: 'white', width: '98%', alignSelf: 'center', marginTop: 20, padding: 48, borderRadius: 15}}>
+        <ScrollView>
+             <View style={{backgroundColor: '#d9d9d9', flex: 1}}>
+            <View style={{flexDirection: 'row', justifyContent: 'space-around', backgroundColor: 'white', width: '98%', alignSelf: 'center', marginTop: 20, padding: 48, borderRadius: 15, height: '96%', marginBottom: '20%'}}>
             <Image source={{ uri: product.image }} style={styles.image} />
             <View style={{flexDirection: 'column', width: '40%'}}>
             <ScrollView style={{flexDirection: 'row',  width: '100%',}}>
@@ -76,6 +77,8 @@ export default function ProductDetail() {
            
         </View>
         </View>
+        </ScrollView>
+       
         
         
         

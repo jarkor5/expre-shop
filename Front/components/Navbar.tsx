@@ -1,10 +1,10 @@
-import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Image } from "react-native";
-import { useRouter } from "expo-router";
-import { IconButton } from "react-native-paper";
+import React from "react"
+import { View, Text, StyleSheet, TouchableOpacity, Image } from "react-native"
+import { useRouter } from "expo-router"
+import { IconButton } from "react-native-paper"
 
 export default function Navbar() {
-  const router = useRouter();
+  const router = useRouter()
 
   return (
     <View style={styles.navbar}>
@@ -21,12 +21,12 @@ export default function Navbar() {
         <TouchableOpacity onPress={() => router.push("/catalog")}>
           <Text style={styles.menuItem}>Catálogo</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => router.push("/")}>
+        <TouchableOpacity onPress={() => router.push("/cart")}>
           <IconButton icon="cart" size={36} style={styles.cartIcon} />
         </TouchableOpacity>
       </View>
     </View>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -60,4 +60,4 @@ const styles = StyleSheet.create({
   cartIcon: {
     marginHorizontal: 10,
   },
-});
+})

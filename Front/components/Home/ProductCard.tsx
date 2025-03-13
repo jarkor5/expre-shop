@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useState } from "react";
 import { Pressable, Image, Text, StyleSheet, View } from "react-native";
+import { Button, Snackbar, useTheme, Portal } from "react-native-paper";
 import { Product } from "@/data/products";
-import { Button } from "react-native-paper";
 import { useRouter } from "expo-router";
+import { useCart } from "@/context/useCart";
 
 type ProductCardProps = {
   product: Product;
@@ -17,65 +18,106 @@ export default function ProductCard({
   onAddToCart,
   variant = "default",
 }: ProductCardProps) {
-const router = useRouter()
-  const isCatalog = variant === "catalog"
-  const maxLen = isCatalog ? 21 : 25
+  const { addToCart } = useCart();
+  const router = useRouter();
+  const isCatalog = variant === "catalog";
+  const maxLen = isCatalog ? 21 : 25;
+  const displayName =
+    product.name.length > maxLen
+      ? product.name.slice(0, maxLen) + "..."
+      : product.name;
 
-const displayName = 
-product.name.length > maxLen
-? product.name.slice(0, maxLen) + "..."
-: product.name
-      
+  // Controlamos la visibilidad del Snackbar y su mensaje
+  const [snackbarVisible, setSnackbarVisible] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  
+  // Si quieres personalizar el color del fondo, puedes usar el theme de react-native-paper
+  const { colors } = useTheme();
+
+  const handleAddToCart = () => {
+    try {
+      addToCart(product);
+      setSnackbarMessage("Añadido al carrito correctamente");
+      setSnackbarVisible(true);
+    } catch (error) {
+      console.error(error);
+      setSnackbarMessage("No se pudo añadir al carrito");
+      setSnackbarVisible(true);
+    }
+  };
 
   return (
-    <Pressable onPress={ ()=> {
-      if (onPress){
-        onPress()
-      }
-      router.push({
-        pathname: "/product/[id]",
-        params: { id: product.id },
-      });
-    }}>
-      {({ hovered }) => (
-        <View
-          style={[
-            isCatalog ? styles.catalogCard : styles.card,
-            hovered && { transform: [{ scale: 1.05 }] },
-          ]}
-        >
-          <Image
-            source={{ uri: product.image }}
-            style={isCatalog ? styles.catalogImage : styles.image}
-          />
-          <Text style={styles.name}>{displayName}</Text>
-          <Text style={styles.price}>${product.price}</Text>
-          {!isCatalog && (
-            <Text numberOfLines={2} style={styles.description}>
-              {product.description}
-            </Text>
-          )}
-          <Button
-            mode="contained"
-            style={styles.addButton}
-            onPress={
-              onAddToCart ? onAddToCart : () => console.log("agregado al carrito")
-            }
+    <>
+      <Pressable
+        onPress={() => {
+          if (onPress) onPress();
+          router.push({
+            pathname: "/product/[id]",
+            params: { id: product.id },
+          });
+        }}
+      >
+        {({ hovered }) => (
+          <View
+            style={[
+              isCatalog ? styles.catalogCard : styles.card,
+              hovered && { transform: [{ scale: 1.05 }] },
+            ]}
           >
-            Agregar al carrito
-          </Button>
-          {isCatalog && (
+            <Image
+              source={{ uri: product.image }}
+              style={isCatalog ? styles.catalogImage : styles.image}
+            />
+            <Text style={styles.name}>{displayName}</Text>
+            <Text style={styles.price}>${product.price}</Text>
+            {!isCatalog && (
+              <Text numberOfLines={2} style={styles.description}>
+                {product.description}
+              </Text>
+            )}
             <Button
               mode="contained"
-              style={styles.buyNowButton}
-              onPress={() => console.log("comprar ahora")}
+              style={styles.addButton}
+              onPress={handleAddToCart}
+              textColor="white"
             >
-              Comprar ahora
+              Agregar al carrito
             </Button>
-          )}
-        </View>
-      )}
-    </Pressable>
+            {isCatalog && (
+              <Button
+                mode="contained"
+                style={styles.buyNowButton}
+                onPress={() => console.log("comprar ahora")}
+                textColor="white"
+              >
+                Comprar ahora
+              </Button>
+            )}
+          </View>
+        )}
+      </Pressable>
+        <Portal>
+        <Snackbar
+        visible={snackbarVisible}
+        onDismiss={() => setSnackbarVisible(false)}
+        duration={2000} 
+        style={[
+          { backgroundColor: "#44B244", width: '20%', alignSelf: 'center' },
+        ]}
+        wrapperStyle={{
+          position: "absolute",
+          top: 50,        
+          left: 10,        
+          right: 10,
+          bottom: "auto",  
+          zIndex: 9999,    
+        }}
+      >
+        {snackbarMessage}
+      </Snackbar>
+        </Portal>
+      
+    </>
   );
 }
 
@@ -87,10 +129,9 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 0.5,
     borderColor: "#F1AB86",
-    width:  280,
+    width: 280,
     alignItems: "center",
     height: 350,
-    
   },
   catalogCard: {
     marginRight: 24,
@@ -100,10 +141,9 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 0.5,
     borderColor: "#F1AB86",
-    width: '90%', 
+    width: "90%",
     alignItems: "center",
     height: 350,
-    
   },
   image: {
     width: 200,
@@ -114,7 +154,7 @@ const styles = StyleSheet.create({
     alignSelf: "center",
   },
   catalogImage: {
-    width: 240, 
+    width: 240,
     height: 160,
     marginBottom: 8,
     borderRadius: 8,
@@ -148,5 +188,15 @@ const styles = StyleSheet.create({
     marginTop: 10,
     alignSelf: "stretch",
     backgroundColor: "#8C2F39",
+  },
+  snackbarWrapper: {
+    // Reposiciona el Snackbar arriba si deseas
+    top: 0,
+    bottom: "auto",
+  },
+  snackbar: {
+    // color de texto blanco
+    // backgroundColor se definió inline arriba
+    color: "#fff",
   },
 });
