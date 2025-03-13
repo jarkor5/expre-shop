@@ -155,3 +155,11 @@ def get_filters(category: Optional[str] = None, db: Session = Depends(get_db)):
     brands_list = [b[0] for b in brands if b[0] is not None]
 
     return {"categories": categories_list, "brands": brands_list}
+
+
+@router.get("/products/{product_id}", response_model=Product)
+def read_product(product_id: int, db: Session = Depends(get_db)):
+    db_product = db.query(ProductDB).filter(ProductDB.id == product_id).first()
+    if not db_product:
+        raise HTTPException(status_code=404, detail="Producto no encontrado")
+    return db_product
