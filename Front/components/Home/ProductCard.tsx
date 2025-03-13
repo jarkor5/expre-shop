@@ -16,12 +16,14 @@ export default function ProductCard({
   onAddToCart,
   variant = "default",
 }: ProductCardProps) {
-  const isCatalog = variant === "catalog";
+  const isCatalog = variant === "catalog"
+  const maxLen = isCatalog ? 21 : 25
 
-  const name =
-    product.name.length > 25
-      ? product.name.slice(0, 20) + "..."
-      : product.name;
+const displayName = 
+product.name.length > maxLen
+? product.name.slice(0, maxLen) + "..."
+: product.name
+      
 
   return (
     <Pressable onPress={onPress}>
@@ -36,7 +38,7 @@ export default function ProductCard({
             source={{ uri: product.image }}
             style={isCatalog ? styles.catalogImage : styles.image}
           />
-          <Text style={styles.name}>{name}</Text>
+          <Text style={styles.name}>{displayName}</Text>
           <Text style={styles.price}>${product.price}</Text>
           {!isCatalog && (
             <Text numberOfLines={2} style={styles.description}>
