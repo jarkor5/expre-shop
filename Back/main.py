@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from routers import products 
 from database import engine, Base
 
-# Crea todas las tablas (en producción, se recomienda usar migraciones)
+# Crea todas las tablas
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Backend para Expre Shop")

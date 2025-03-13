@@ -12,5 +12,6 @@ class ProductDB(Base):
     category = Column(String, nullable=True)
     brand = Column(String, nullable=True)
     technicalDetails = Column(String, nullable=True)
+    
 
 # TODO: Agregar otros modelos
