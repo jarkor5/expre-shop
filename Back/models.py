@@ -11,5 +11,6 @@ class ProductDB(Base):
     isfeatured = Column(Boolean, default=False)
     category = Column(String, nullable=True)
     brand = Column(String, nullable=True)
+    technicalDetails = Column(String, nullable=True)
 
-# TODO: Agregar otros modelos si es necesario
+# TODO: Agregar otros modelos

@@ -10,6 +10,7 @@ class Product(BaseModel):
     isfeatured: bool
     category: Optional[str] = None
     brand: Optional[str] = None
+    technicalDetails: Optional[str] = None
 
     class Config:
         orm_mode = True
@@ -23,6 +24,7 @@ class ProductUpdate(BaseModel):
     isfeatured: Optional[bool] = None
     category: Optional[str] = None
     brand: Optional[str] = None
+    technicalDetails: Optional[str] = None
 
     class Config:
         orm_mode = True
