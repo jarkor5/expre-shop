@@ -5,6 +5,7 @@ from typing import List, Optional, Dict, Any
 from database import SessionLocal
 from models import ProductDB
 from schemas import Product, ProductUpdate
+from sqlalchemy import or_
 
 router = APIRouter()
 
@@ -163,3 +164,22 @@ def read_product(product_id: int, db: Session = Depends(get_db)):
     if not db_product:
         raise HTTPException(status_code=404, detail="Producto no encontrado")
     return db_product
+
+# Endpoint: Obtener productos similares
+@router.get("/products/{product_id}/similar", response_model=List[Product])
+def get_similar_products(product_id: int, db: Session = Depends(get_db)):
+    base_product = db.query(ProductDB).filter(ProductDB.id == product_id).first()
+    if not base_product:
+        raise HTTPException(status_code=404, detail="Producto no encontrado")
+    similar = (
+        db.query(ProductDB)
+        .filter(ProductDB.id != product_id)
+        .filter(
+            or_(
+                ProductDB.category == base_product.category,
+                ProductDB.brand == base_product.brand
+            )
+        )
+        .all()
+    )
+    return similar
