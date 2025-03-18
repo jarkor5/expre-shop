@@ -1,43 +1,44 @@
-// FeaturedCarousel.tsx
 import React, { useState, useRef } from "react";
-import { 
-  View, 
-  Text, 
-  FlatList, 
-  StyleSheet, 
-  LayoutChangeEvent, 
-  NativeSyntheticEvent, 
-  NativeScrollEvent 
+import {
+  View,
+  Text,
+  FlatList,
+  StyleSheet,
+  LayoutChangeEvent,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
 } from "react-native";
 import { IconButton } from "react-native-paper";
-import ProductCard from "./Home/ProductCard";
 import { Product } from "@/data/products";
+import ProductCard from "./Home/ProductCard";
 import { useRouter } from "expo-router";
 
-export default function FeaturedCarousel({ featuredProducts }: { featuredProducts: Product[] }) {
-  const router = useRouter();
-  const flatListRef = useRef<FlatList>(null);
+type FeaturedCarouselProps = {
+  featuredProducts: Product[];  
+  isFeatured?: boolean;        
+};
 
-  // Estados locales para manejo del scroll
+export default function FeaturedCarousel({
+  featuredProducts,
+  isFeatured = false,
+}: FeaturedCarouselProps) {
+  const router = useRouter();
+  const flatListRef = useRef<FlatList<Product>>(null);
   const [scrollX, setScrollX] = useState(0);
   const [viewWidth, setViewWidth] = useState(0);
   const [contentWidth, setContentWidth] = useState(0);
+  const titleToShow = isFeatured ? "Productos Destacados" : "Quizás podría gustarte";
 
-  // Maneja el evento de scroll y actualiza el estado scrollX
   const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     setScrollX(event.nativeEvent.contentOffset.x);
   };
 
-  // Obtiene el ancho de la vista (carousel) cuando se monta
   const onContainerLayout = (event: LayoutChangeEvent) => {
     setViewWidth(event.nativeEvent.layout.width);
   };
-
-  // Función para desplazarse a la izquierda con wrap-around
   const scrollLeft = () => {
     if (flatListRef.current) {
       if (scrollX <= 0) {
-        // Si ya está al inicio, se desplaza al final
         const newOffset = contentWidth - viewWidth;
         flatListRef.current.scrollToOffset({ offset: newOffset, animated: true });
         setScrollX(newOffset);
@@ -49,11 +50,9 @@ export default function FeaturedCarousel({ featuredProducts }: { featuredProduct
     }
   };
 
-  // Función para desplazarse a la derecha con wrap-around
   const scrollRight = () => {
     if (flatListRef.current) {
-      if (scrollX >= contentWidth - viewWidth) {
-        // Si ya está al final, vuelve al inicio
+      if (scrollX >= contentWidth - viewWidth -1) {
         flatListRef.current.scrollToOffset({ offset: 0, animated: true });
         setScrollX(0);
       } else {
@@ -66,7 +65,7 @@ export default function FeaturedCarousel({ featuredProducts }: { featuredProduct
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Productos Destacados</Text>
+      <Text style={styles.title}>{titleToShow}</Text>
       <View style={styles.carouselContainer} onLayout={onContainerLayout}>
         <IconButton
           icon="chevron-left"
@@ -76,15 +75,23 @@ export default function FeaturedCarousel({ featuredProducts }: { featuredProduct
         />
         <FlatList
           ref={flatListRef}
-          data={featuredProducts.filter((p) => p.isfeatured)}
+          data={featuredProducts} 
           renderItem={({ item }) => (
-            <ProductCard product={item} onPress={() => router.push("/product")} />
+            <ProductCard
+              product={item}
+              onPress={() =>
+                router.push({
+                  pathname: "/product/[id]",
+                  params: { id: item.id },
+                })
+              }
+            />
           )}
           keyExtractor={(item) => item.id}
           horizontal
           onScroll={handleScroll}
           scrollEventThrottle={16}
-          onContentSizeChange={(width, height) => setContentWidth(width)}
+          onContentSizeChange={(width) => setContentWidth(width)}
           contentContainerStyle={styles.productsList}
           showsHorizontalScrollIndicator={false}
         />
@@ -101,15 +108,24 @@ export default function FeaturedCarousel({ featuredProducts }: { featuredProduct
 
 const styles = StyleSheet.create({
   container: { marginTop: "4%" },
-  title: { fontSize: 36, fontWeight: "bold", marginBottom: 10, textAlign: "center" },
-  carouselContainer: { position: "relative" },
-  arrow: { 
-    position: "absolute", 
-    top: "50%", 
-    zIndex: 1, 
-    backgroundColor: "rgba(255,255,255,0.8)" 
+  title: {
+    fontSize: 36,
+    fontWeight: "bold",
+    marginBottom: 10,
+    textAlign: "center",
+  },
+  carouselContainer: {
+    position: "relative",
+  },
+  arrow: {
+    position: "absolute",
+    top: "50%",
+    zIndex: 1,
+    backgroundColor: "rgba(255,255,255,0.8)",
   },
   leftArrow: { left: 0, transform: [{ translateY: -16 }] },
   rightArrow: { right: 0, transform: [{ translateY: -16 }] },
-  productsList: { padding: 12 },
+  productsList: {
+    padding: 12,
+  },
 });
