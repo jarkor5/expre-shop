@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from "react";
-import { View, Text, StyleSheet, ScrollView, LayoutChangeEvent, NativeSyntheticEvent, NativeScrollEvent , Image} from "react-native";
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { View, Text, StyleSheet, ScrollView, LayoutChangeEvent, NativeSyntheticEvent, NativeScrollEvent, Image } from "react-native";
 import { useRouter } from "expo-router";
 import { Checkbox, Button, IconButton } from "react-native-paper";
 import { Product, fetchFeaturedProducts, fetchProductsFiltered, fetchFilters } from "@/data/products";
@@ -7,6 +7,7 @@ import ProductCard from "./ProductCard";
 import FeaturedCarousel from "../FeaturedCarousel";
 import Filters from "./Filters";
 import CatalogList from "./CatalogList";
+import { buildCatalogQuery } from "@/utils/buildCatalogQuery";
 
 // Constante para paginación
 const CATALOG_LIMIT = 12;
@@ -38,73 +39,93 @@ export default function Home() {
   const isFirstLoad = useRef(true);
 
   useEffect(() => {
-    const loadData = async () => {
-      if (isFirstLoad.current) {
-        const featured = await fetchFeaturedProducts();
-        setFeaturedProducts(featured);
-        isFirstLoad.current = false;
-      }
-      let filtersData;
-      if (selectedCategories.length > 0) {
-        filtersData = await fetchFilters(selectedCategories[0]);
-      } else {
-        filtersData = await fetchFilters();
-      }
-      setFilters(filtersData);
-      setCatalogPage(1);
-      setHasMoreCatalogProducts(true);
-  
-      let queryParams = `?page=1&limit=${CATALOG_LIMIT}`;
-      if (selectedCategories.length > 0) {
-        queryParams += `&category=${encodeURIComponent(selectedCategories[0])}`;
-      }
-      if (selectedBrands.length > 0) {
-        queryParams += `&brand=${encodeURIComponent(selectedBrands[0])}`;
-      }
-      console.log("Query Params:", queryParams); 
-  
-      const catalogData = await fetchProductsFiltered(queryParams);
-      if (catalogData.length < CATALOG_LIMIT) {
-        setHasMoreCatalogProducts(false);
-      }
-      setCatalogProducts(catalogData);
-      setLoading(false);
-    };
-  
-    loadData();
-  }, [selectedCategories, selectedBrands]);
-  
+    let mounted = true;
 
-  const loadCatalogPage = (page: number) => {
-    let queryParams = `?page=${page}&limit=${CATALOG_LIMIT}`;
-    if (selectedCategories.length > 0) {
-      queryParams += `&category=${encodeURIComponent(selectedCategories[0])}`;
-    }
-    if (selectedBrands.length > 0) {
-      queryParams += `&brand=${encodeURIComponent(selectedBrands[0])}`;
-    }
-    console.log("Query Params:", queryParams); 
-    fetchProductsFiltered(queryParams).then((data) => {
+    const loadData = async () => {
+      try {
+        if (isFirstLoad.current) {
+          const featured = await fetchFeaturedProducts();
+          if (mounted) {
+            setFeaturedProducts(featured);
+            isFirstLoad.current = false;
+          }
+        }
+        const categoryParam = selectedCategories[0];
+        const filtersData = await fetchFilters(categoryParam);
+        if (mounted) {
+          setFilters(filtersData);
+          setCatalogPage(1);
+          setHasMoreCatalogProducts(true);
+        }
+        const queryParams = buildCatalogQuery(1, CATALOG_LIMIT, {
+          category: selectedCategories[0],
+          brand: selectedBrands[0],
+        });
+        console.log("Query Params:", queryParams);
+        const catalogData = await fetchProductsFiltered(queryParams);
+        if (mounted) {
+          if (catalogData.length < CATALOG_LIMIT) {
+            setHasMoreCatalogProducts(false);
+          }
+          setCatalogProducts(catalogData);
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error("Error al cargar datos:", error);
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadData();
+
+    return () => {
+      mounted = false;
+    };
+  }, [selectedCategories, selectedBrands]);
+
+
+
+  const loadCatalogPage = async (page: number) => {
+    try {
+      const queryString = buildCatalogQuery(page, CATALOG_LIMIT, {
+        category: selectedCategories[0],
+        brand: selectedBrands[0],
+      })
+
+      const data = await fetchProductsFiltered(queryString)
+
+
       if (data.length < CATALOG_LIMIT) {
-        setHasMoreCatalogProducts(false);
+        setHasMoreCatalogProducts(false)
       }
+
       if (page === 1) {
-        setCatalogProducts(data);
+        setCatalogProducts(data)
       } else {
-        setCatalogProducts((prev) => [...prev, ...data]);
+        setCatalogProducts((prev) => [...prev, ...data])
       }
-    });
-    // TODO: Manejar errores en la carga de datos
-  };
-  
+    } catch (error) {
+      console.error("error al cargar la página del catálogo", error)
+    }
+  }
 
 
   // Función para cargar más productos del catálogo
-  const handleLoadMoreCatalog = () => {
-    const nextPage = catalogPage + 1;
-    setCatalogPage(nextPage);
-    loadCatalogPage(nextPage);
-  };
+  const handleLoadMoreCatalog = useCallback(async () => {
+    try {
+      setCatalogPage((prevPage) => {
+        const nextPage = prevPage + 1;
+        loadCatalogPage(nextPage);
+        return nextPage;
+      });
+    } catch (error) {
+      console.error("Error al cargar más productos del catálogo:", error);
+      // TODO: Manejar error con un estado o alert
+    }
+  }, [loadCatalogPage, setCatalogPage]);
+
 
   // Funciones para el carrusel de destacados
   const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -134,12 +155,13 @@ export default function Home() {
   const toggleCategory = (category: string) => {
     if (selectedCategories.includes(category)) {
       setSelectedCategories([]);
+      setSelectedBrands([])
     } else {
       setSelectedCategories([category])
       setSelectedBrands([])
     }
   };
-  
+
   const toggleBrand = (brand: string) => {
     if (selectedBrands.includes(brand)) {
       setSelectedBrands([]);
@@ -152,7 +174,7 @@ export default function Home() {
   if (loading) {
     return (
       <View style={styles.container}>
-        <Text style={{fontSize: 36, alignSelf: 'center'}}>Cargando productos... Gracias por tu paciencia!</Text>
+        <Text style={{ fontSize: 36, alignSelf: 'center' }}>Cargando productos... Gracias por tu paciencia!</Text>
       </View>
     );
   }
@@ -196,49 +218,93 @@ export default function Home() {
 
         <FeaturedCarousel
           featuredProducts={featuredProducts}
+          isFeatured
 
         />
-<Text style={styles.title}>Descubre nuestro Cátalogo</Text>
+        <Text style={styles.title}>Descubre nuestro Cátalogo</Text>
         <View style={{ flexDirection: "row", width: '100%', alignSelf: 'center' }}>
-          
-          <ScrollView style={{ width: '20%'}}>
-          <Filters
-            filters={filters}
-            selectedCategories={selectedCategories}
-            selectedBrands={selectedBrands}
-            toggleCategory={toggleCategory}
-            toggleBrand={toggleBrand}
-            showAllCategories={showAllCategories}
-            setShowAllCategories={setShowAllCategories}
-            showAllBrands={showAllBrands}
-            setShowAllBrands={setShowAllBrands}
-          />
+
+          <ScrollView style={{ width: '20%' }}>
+            <Filters
+              filters={filters}
+              selectedCategories={selectedCategories}
+              selectedBrands={selectedBrands}
+              toggleCategory={toggleCategory}
+              toggleBrand={toggleBrand}
+              showAllCategories={showAllCategories}
+              setShowAllCategories={setShowAllCategories}
+              showAllBrands={showAllBrands}
+              setShowAllBrands={setShowAllBrands}
+            />
           </ScrollView>
-        
-      <ScrollView style={{ width: '100%', padding: 16, marginLeft: '5%'}}>
-      <CatalogList
-            catalogProducts={catalogProducts}
-            loadMoreCatalog={handleLoadMoreCatalog}
-            hasMoreCatalogProducts={hasMoreCatalogProducts}
-          />
-      </ScrollView>
-        
+
+          <ScrollView style={{ width: '100%', padding: 16, marginLeft: '5%' }}>
+            <CatalogList
+              catalogProducts={catalogProducts}
+              loadMoreCatalog={handleLoadMoreCatalog}
+              hasMoreCatalogProducts={hasMoreCatalogProducts}
+            />
+          </ScrollView>
+
         </View>
-          
-        </View>
+
+      </View>
 
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff", padding: 8 },
-  bannerContainer: { width: "100%", height: 300, marginVertical: 10 },
-  bannerImage: { width: "100%", height: "100%", resizeMode: "cover", borderRadius: 8 },
-  title: { fontSize: 36, fontWeight: "bold", marginBottom: 10, textAlign: "center" },
-  bodyText: { fontSize: 20 },
-  subtitle: { fontSize: 26, fontWeight: "bold", marginBottom: 16, marginTop: 8, textAlign: "center" },
-  plus: { flexDirection: "row", justifyContent: "space-around", marginTop: "2%" },
-  plusBox: { padding: 16, borderWidth: 2, width: "23%", justifyContent: "center", alignItems: "center", borderColor: "#461220", borderRadius: 8, marginBottom: 8 },
-  plusText: { fontSize: 18, color: "#461220", fontWeight: "600" },
+  container: {
+    flex: 1,
+    backgroundColor: "#fff",
+    padding: 8
+  },
+  bannerContainer: {
+    width: "100%",
+    height: 300,
+    marginVertical: 10
+  },
+  bannerImage: {
+    width: "100%",
+    height: "100%",
+    resizeMode: "cover",
+    borderRadius: 8
+  },
+  title: {
+    fontSize: 36,
+    fontWeight: "bold",
+    marginBottom: 10,
+    textAlign: "center"
+  },
+  bodyText: {
+    fontSize: 20
+  },
+  subtitle: {
+    fontSize: 26,
+    fontWeight: "bold",
+    marginBottom: 16,
+    marginTop: 8,
+    textAlign: "center"
+  },
+  plus: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    marginTop: "2%"
+  },
+  plusBox: {
+    padding: 16,
+    borderWidth: 2,
+    width: "23%",
+    justifyContent: "center",
+    alignItems: "center",
+    borderColor: "#461220",
+    borderRadius: 8,
+    marginBottom: 8
+  },
+  plusText: {
+    fontSize: 18,
+    color: "#461220",
+    fontWeight: "600"
+  },
 });
