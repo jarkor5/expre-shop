@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { IconButton } from "react-native-paper";
 import { Product } from "@/data/products";
-import ProductCard from "./Home/ProductCard";
+import ProductCard from "../Home/ProductCard";
 import { useRouter } from "expo-router";
 
 type FeaturedCarouselProps = {

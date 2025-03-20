@@ -4,7 +4,7 @@ import { useRouter } from "expo-router";
 import { Checkbox, Button, IconButton } from "react-native-paper";
 import { Product, fetchFeaturedProducts, fetchProductsFiltered, fetchFilters } from "@/data/products";
 import ProductCard from "./ProductCard";
-import FeaturedCarousel from "../FeaturedCarousel";
+import FeaturedCarousel from "../Products/FeaturedCarousel";
 import Filters from "./Filters";
 import CatalogList from "./CatalogList";
 import { buildCatalogQuery } from "@/utils/buildCatalogQuery";
