@@ -28,3 +28,28 @@ class ProductUpdate(BaseModel):
 
     class Config:
         orm_mode = True
+
+
+class UserBase(BaseModel):
+    username: str
+    full_name: Optional[str] = None
+    email: Optional[str] = None
+
+class UserCreate(UserBase):
+    password: str  # Contraseña en texto plano para el registro
+    role: Optional[str] = "user"
+
+class UserResponse(UserBase):
+    id: int
+    role: str
+    disabled: bool
+
+    class Config:
+        orm_mode = True
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+class TokenData(BaseModel):
+    username: Optional[str] = None

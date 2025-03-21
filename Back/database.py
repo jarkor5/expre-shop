@@ -11,3 +11,12 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
 # TODO: Considerar agregar funciones de conexión/reconexión
+
+
+def get_db():
+    """Dependencia para obtener una sesión de base de datos."""
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
