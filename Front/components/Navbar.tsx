@@ -64,13 +64,13 @@ const closeMenu = () => setMenuVisible(false)
       onPress={() => {
         closeMenu();
         signOut();
-        router.push("/login" as "/login/index");
+        router.push("/login" );
       }}
       title="Cerrar sesión"
     />
   </Menu>
 ) : (
-  <TouchableOpacity onPress={() => router.push("/login" as "/login/index")}>
+  <TouchableOpacity onPress={() => router.push("/login" )}>
     <Text style={styles.loginText}>Iniciar sesión</Text>
   </TouchableOpacity>
 )}
@@ -99,13 +99,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    width: '30%'
+    width: '30%',
   },
   menuItem: {
     marginHorizontal: 10,
     fontSize: 22,
     color: "#333",
-
+    
     fontWeight: 600
   },
   cartIcon: {
