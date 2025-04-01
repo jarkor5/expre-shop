@@ -78,6 +78,24 @@ export default function RegisterScreen() {
     <View style={styles.container}>
        <AntDesign name="arrowleft" onPress={() => {router.push('/')}} size={32} color="black" style={{marginLeft: '5%'} } />
        <Text style={styles.title}>Registro de Usuario</Text>
+       <Snackbar
+        visible={snackbarVisible}
+        onDismiss={() => setSnackbarVisible(false)}
+        duration={3000}
+        style={[
+          { backgroundColor: "#44B244", width: '20%', alignSelf: 'center' },
+        ]}
+        wrapperStyle={{
+          position: "absolute",
+          top: 50,        
+          left: 10,        
+          right: 10,
+          bottom: "auto",  
+          zIndex: 9999,    
+        }}
+      >
+        {snackbarMessage}
+      </Snackbar>
       <View style={styles.formContainer}>
       <TextInput
         label="Usuario"
@@ -121,7 +139,11 @@ export default function RegisterScreen() {
       </View>
     
       
-      <Button mode="contained" onPress={handleRegister} style={styles.button} textColor="#FFFFFF" disabled={!isFormValid}>
+      <Button mode="contained" onPress={handleRegister} style={[
+  styles.button,
+  !isFormValid && { backgroundColor: "#ccc" }
+]}
+ textColor="#FFFFFF" disabled={!isFormValid}>
         Registrarse
       </Button>
 
@@ -139,13 +161,7 @@ export default function RegisterScreen() {
 
 
 
-      <Snackbar
-        visible={snackbarVisible}
-        onDismiss={() => setSnackbarVisible(false)}
-        duration={3000}
-      >
-        {snackbarMessage}
-      </Snackbar>
+    
       {/* TODO: Agregar validaciones de formulario y feedback visual */}
     </View>
   );
