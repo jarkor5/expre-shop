@@ -36,6 +36,10 @@ def get_password_hash(password: str) -> str:
 def get_user(db: Session, username: str) -> Optional[UserDB]:
     return db.query(UserDB).filter(UserDB.username == username).first()
 
+def get_user_by_email(db: Session, email: str) -> Optional[UserDB]:
+    return db.query(UserDB).filter(UserDB.email == email).first()
+
+
 # Función para autenticar al usuario
 def authenticate_user(db: Session, username: str, password: str) -> Optional[UserDB]:
     user = get_user(db, username)
@@ -74,9 +78,14 @@ async def login(
 # Endpoint: Registrar un nuevo usuario
 @router.post("/users", response_model=UserResponse)
 def register_user(user: UserCreate, db: Session = Depends(get_db)):
-    # Verificar si el usuario ya existe
+    # Validar username duplicado
     if get_user(db, user.username):
         raise HTTPException(status_code=400, detail="El usuario ya existe")
+
+    # Validar email duplicado
+    if get_user_by_email(db, user.email):
+        raise HTTPException(status_code=400, detail="El email ya está en uso")
+
     hashed_password = get_password_hash(user.password)
     new_user = UserDB(
         username=user.username,
@@ -84,12 +93,13 @@ def register_user(user: UserCreate, db: Session = Depends(get_db)):
         email=user.email,
         hashed_password=hashed_password,
         disabled=False,
-        role=user.role or "user", 
+        role=user.role or "user",
     )
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
     return UserResponse.from_orm(new_user)
+
 
 # Endpoint: Eliminar usuario por username
 @router.delete("/users/{username}", response_model=dict)

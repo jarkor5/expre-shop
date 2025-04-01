@@ -13,7 +13,7 @@ class Product(BaseModel):
     technicalDetails: Optional[str] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class ProductUpdate(BaseModel):
     id: Optional[int] = None
@@ -27,7 +27,7 @@ class ProductUpdate(BaseModel):
     technicalDetails: Optional[str] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class UserBase(BaseModel):
@@ -45,7 +45,7 @@ class UserResponse(UserBase):
     disabled: bool
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class Token(BaseModel):
     access_token: str
