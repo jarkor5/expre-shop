@@ -3,12 +3,8 @@ import { View, Text, StyleSheet } from "react-native";
 import { TextInput, Button, Snackbar } from "react-native-paper";
 import { useRouter } from "expo-router";
 import {z} from "zod";
+import { AntDesign } from "@expo/vector-icons";
 
-/**
- * Pantalla de registro de usuario.
- * Se recopilan datos del formulario y se envía una petición POST
- * al endpoint de registro. Se muestran mensajes de error o confirmación.
- */
 
 const registerSchema = z.object({
   username: z.string().min(1, "El nombre de usuario es obligatorio"),
@@ -80,7 +76,8 @@ export default function RegisterScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Registro de Usuario</Text>
+       <AntDesign name="arrowleft" onPress={() => {router.push('/')}} size={32} color="black" style={{marginLeft: '5%'} } />
+       <Text style={styles.title}>Registro de Usuario</Text>
       <View style={styles.formContainer}>
       <TextInput
         label="Usuario"
@@ -158,8 +155,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
-    justifyContent: "center",
-    backgroundColor: "#fff",
   },
   title: {
     fontSize: 24,
