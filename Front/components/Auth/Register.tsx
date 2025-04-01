@@ -2,24 +2,34 @@ import React, { useState } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { TextInput, Button, Snackbar } from "react-native-paper";
 import { useRouter } from "expo-router";
+import {z} from "zod";
 
 /**
  * Pantalla de registro de usuario.
  * Se recopilan datos del formulario y se envía una petición POST
  * al endpoint de registro. Se muestran mensajes de error o confirmación.
  */
+
+const registerSchema = z.object({
+  username: z.string().min(1, "El nombre de usuario es obligatorio"),
+  full_name: z.string().min(1, "El nombre completo es obligatorio"),
+  email: z.string().email("Email inválido"),
+  password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres"),
+})
 export default function RegisterScreen() {
   // Estados para los campos del formulario
   const [username, setUsername] = useState("");
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+ 
   
   // Estados para manejo de mensajes y errores
   const [error, setError] = useState<string | null>(null);
   const [snackbarVisible, setSnackbarVisible] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
-
+  const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
+  const isFormValid = username && fullName && email && password; 
   // Hook para navegación con Expo Router
   const router = useRouter();
 
@@ -35,6 +45,7 @@ export default function RegisterScreen() {
     };
 
     try {
+      registerSchema.parse(user); // Validamos el objeto usuario con Zod
       const response = await fetch("http://127.0.0.1:8001/users", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -54,45 +65,83 @@ export default function RegisterScreen() {
       }, 2000);
     } catch (err: any) {
       // En caso de error, mostramos el mensaje en el Snackbar
-      setError(err.message);
-      setSnackbarMessage(err.message);
-      setSnackbarVisible(true);
+      if (err instanceof z.ZodError) {
+        const fieldErrors: { [key: string]: string } = {};
+        err.errors.forEach((e) => {
+          fieldErrors[e.path[0]] = e.message;
+        });
+        setFormErrors(fieldErrors);
+        return;
+      }
+      
+      setSnackbarVisible(true)
     }
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Registro de Usuario</Text>
+      <View style={styles.formContainer}>
       <TextInput
         label="Usuario"
         value={username}
         onChangeText={setUsername}
         style={styles.input}
+        mode="outlined"
+        textColor="black"
       />
+      {formErrors.username && <Text style={styles.error}>{formErrors.username}</Text>}
       <TextInput
         label="Nombre Completo"
         value={fullName}
         onChangeText={setFullName}
         style={styles.input}
+        mode="outlined"
+        textColor="black"
       />
+      {formErrors.full_name && <Text style={styles.error}>{formErrors.full_name}</Text>}
       <TextInput
         label="Email"
         value={email}
         onChangeText={setEmail}
         style={styles.input}
         keyboardType="email-address"
+        mode="outlined"
+         textColor="black"
       />
+      {formErrors.email && <Text style={styles.error}>{formErrors.email}</Text>}
       <TextInput
         label="Contraseña"
         value={password}
         onChangeText={setPassword}
         secureTextEntry
         style={styles.input}
+        mode="outlined"
+         textColor="black"
       />
-      {error && <Text style={styles.error}>{error}</Text>}
-      <Button mode="contained" onPress={handleRegister} style={styles.button}>
+      {formErrors.password && <Text style={styles.error}>{formErrors.password}</Text>}
+      {/* Mostrar error si existe */}
+      </View>
+    
+      
+      <Button mode="contained" onPress={handleRegister} style={styles.button} textColor="#FFFFFF" disabled={!isFormValid}>
         Registrarse
       </Button>
+
+     <View>
+        <Text style={{ textAlign: "center", marginTop: 16, fontSize: 16 }}>
+          ¿Ya tienes una cuenta?{" "}
+          <Text
+            style={{ color: "blue", fontSize: 16 }}
+            onPress={() => router.push("/login")}
+          >
+            Inicia sesión
+          </Text>
+        </Text>
+     </View>
+
+
+
       <Snackbar
         visible={snackbarVisible}
         onDismiss={() => setSnackbarVisible(false)}
@@ -119,13 +168,22 @@ const styles = StyleSheet.create({
   },
   input: {
     marginBottom: 16,
+    width: '100%',
+    alignSelf: 'center',
+    backgroundColor: '#FFFFFF',
   },
   button: {
+    width: '30%',
+    alignSelf: 'center',
     marginTop: 16,
+    backgroundColor: "#F1AB86",
   },
   error: {
     color: "red",
-    textAlign: "center",
     marginBottom: 8,
   },
+  formContainer: {
+    width: '30%',
+    alignSelf: 'center'
+  }
 });
