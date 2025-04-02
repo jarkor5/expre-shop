@@ -3,12 +3,12 @@ from dotenv import load_dotenv
 from datetime import datetime, timedelta
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status, Body
+from fastapi import APIRouter, Depends, HTTPException, status, Body, BackgroundTasks
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
-
+from email_utils import send_recovery_email
 from schemas import Token, TokenData, UserCreate, UserResponse
 from models import UserDB
 from database import get_db
@@ -112,3 +112,50 @@ def delete_user(username: str, db: Session = Depends(get_db)):
     return {"detail": "Usuario eliminado correctamente"}
 
 # TODO: Agregar endpoint para actualizar datos del usuario (PATCH/PUT)
+
+
+@router.post("/password-recovery")
+async def password_recovery(
+    background_tasks: BackgroundTasks, 
+    email: str = Body(...),   
+    db: Session = Depends(get_db)
+):
+    user = db.query(UserDB).filter(UserDB.email == email).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    token = create_access_token({"sub": user.email}, timedelta(hours=1))
+
+    # Enviar en segundo plano
+    background_tasks.add_task(send_recovery_email, email, token)
+
+    return {"message": "Se ha enviado un enlace de recuperación al correo"}
+
+
+@router.post("/reset-password")
+def reset_password(
+    token: str = Body(...),
+    new_password: str = Body(...),
+    db: Session = Depends(get_db)
+):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        email = payload.get("sub")
+    except JWTError:
+        raise HTTPException(status_code=400, detail="Token inválido o expirado")
+
+    user = db.query(UserDB).filter(UserDB.email == email).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    user.hashed_password = get_password_hash(new_password)
+    db.commit()
+    return {"message": "Contraseña actualizada correctamente"}
+
+@router.get("/test-email")
+async def test_email(background_tasks: BackgroundTasks):
+    test_email = "jacoor626@gmail.com"
+    token = create_access_token({"sub": test_email}, timedelta(hours=1))
+    background_tasks.add_task(send_recovery_email, test_email, token)
+    return {"message": f"Correo de prueba enviado a {test_email}"}
+
